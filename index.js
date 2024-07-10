@@ -23,27 +23,23 @@ app.get("/api/hello", function (req, res) {
   res.json({ greeting: "hello API" });
 });
 
-app.get("/api/:year-:mpnth-:day-:overflow", (req, res) => {
-  res.json({ error: "Invalid Date" });
-});
-app.get("/api/:year-:month-:day", (req, res) => {
-  const year = parseInt(req.params.year);
-  const month = parseInt(req.params.month);
-  const day = parseInt(req.params.day);
-  if (req.params.overflow || month > 12 || month < 1 || day > 31 || day < 1) {
-    res.json({ error: "Invalid Date" });
+app.get("/api/:date?", (req, res) => {
+  const date = req.params.date;
+  if (date) {
+    if (date.includes("-")) {
+      const dateTime = new Date(date);
+      const unixTime = Math.floor(dateTime.getTime() / 1000);
+      res.json({ unix: unixTime, utc: dateTime.toUTCString() });
+    } else {
+      const unixTime = parseInt(date);
+      const dateTime = new Date(unixTime);
+      res.json({ unix: unixTime, utc: dateTime.toUTCString() });
+    }
   } else {
-    const dateVal = new Date(year, month - 1, day);
-    const unixTime = Math.floor(dateVal.getTime() / 1000);
-    res.json({ unixTime: unixTime, dateTime: dateVal.toUTCString() });
+    req.time = new Date();
+    const unixTime = Math.floor(req.time.getTime() / 1000);
+    res.json({ unix: unixTime, utc: req.time.toUTCString() });
   }
-});
-
-app.get("/api/:unix", (req, res) => {
-  const unixTime = req.params.unix;
-  const unixTimeSeconds = parseInt(unixTime);
-  const dateTime = new Date(unixTimeSeconds);
-  res.json({ unix: unixTime, date: dateTime.toUTCString() });
 });
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
