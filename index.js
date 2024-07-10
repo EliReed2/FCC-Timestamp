@@ -24,23 +24,37 @@ app.get("/api/hello", function (req, res) {
 });
 
 app.get("/api/:date?", (req, res) => {
-  const date = req.params.date;
-  if (date) {
-    if (date.includes("-")) {
-      const dateTime = new Date(date);
-      const unixTime = Math.floor(dateTime.getTime() / 1000);
+  req.time = new Date();
+  const date_string = req.params.date;
+  if (date_string) {
+    if (isAllDigits(date_string) === false) {
+      const dateTime = new Date(date_string);
+      const infoArray = date_string.split("-");
+      if (
+        infoArray.length > 3 ||
+        infoArray[1] > 12 ||
+        infoArray[1] < 1 ||
+        infoArray[2] > 31 ||
+        infoArray[2] < 1
+      ) {
+        res.json({ error: "Invalid Date" });
+      }
+      const unixTime = Math.floor(dateTime.getTime());
       res.json({ unix: unixTime, utc: dateTime.toUTCString() });
     } else {
-      const unixTime = parseInt(date);
+      const unixTime = parseInt(date_string);
       const dateTime = new Date(unixTime);
       res.json({ unix: unixTime, utc: dateTime.toUTCString() });
     }
   } else {
-    req.time = new Date();
-    const unixTime = Math.floor(req.time.getTime() / 1000);
+    const unixTime = Math.floor(req.time.getTime());
     res.json({ unix: unixTime, utc: req.time.toUTCString() });
   }
 });
+
+function isAllDigits(date_string) {
+  return /^-?\d+$/.test(date_string);
+}
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
   console.log("Your app is listening on port " + listener.address().port);
